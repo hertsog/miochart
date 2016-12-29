@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mio Chart</title>
+
+    <script src="angular.min.js"></script>
+    <script src="Chart.bundle.min.js"></script>
+    <script src="angular-chart.min.js"></script>
+</head>
+
+<body>
+<div ng-app="myApp" ng-controller="myCtrl">
+
+    <input type="file" id="file" accept=".csv" required />
+    <a href="" id="loadLink" ng-click="fileNameChanged()">KUVA</a>
+
+    <canvas id="line" class="chart chart-line" chart-data="data"
+            chart-labels="labels" chart-series="series" chart-options="options"
+            chart-dataset-override="datasetOverride">
+    </canvas>
+
+    <input type="range" min="0" max="{{maxPos}}" ng-model="startPos" ng-change="positionChanged()" />
+    {{startPos}}
+
+</div>
+
+<script>
+    var app = angular.module('myApp', ["chart.js"]);
+    app.controller('myCtrl', function($scope) {
+        $scope.pointsDisplayed = 1800;
+        $scope.startPos = 0;
+        $scope.maxPos = 0;
+
+        $scope.series = ['Pulss', 'Keskmine'];
+
+        $scope.options = {
+            animation: false,
+            elements: {
+                point: {
+                    radius: 0
+                }
+            }
+        };
+
+        $scope.fileNameChanged = function () {
+            var files = document.getElementById('file').files;
+            reader.readAsText(files[0]);
+        }
+
+        var reader = new FileReader();
+
+        reader.onload = function () {
+            $scope.fileContent = reader.result;
+            $scope.fileLines = $scope.fileContent.split(/\r?\n/);
+
+            $scope.alllabels = [];
+            $scope.alldata = [];
+
+            var data1 = []
+            var data2 = []
+
+            for (var i = 10; i < $scope.fileLines.length; i++) {
+                var values = $scope.fileLines[i].split(", ");
+                $scope.alllabels.push(values[0]);
+                data1.push(values[1]);
+                data2.push(values[1]);
+            }
+
+            $scope.alldata = [data1, data2];
+
+            $scope.maxPos = Math.max($scope.alllabels.length - $scope.pointsDisplayed, 0);
+
+            $scope.positionChanged();
+
+            $scope.$apply();
+        }
+
+        $scope.positionChanged = function () {
+            $scope.labels = $scope.alllabels.slice($scope.startPos, parseInt($scope.startPos) + $scope.pointsDisplayed);
+            var data1 = $scope.alldata[0].slice($scope.startPos, parseInt($scope.startPos) + $scope.pointsDisplayed);
+            var data2 = $scope.alldata[1].slice($scope.startPos, parseInt($scope.startPos) + $scope.pointsDisplayed);
+            $scope.data = [data1, data2];
+        }
+    });
+</script>
+</body>
+</html>
